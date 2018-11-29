@@ -5,33 +5,34 @@ import mlflow
 import mlflow.sklearn
 
 def main():
-    alpha    = float(argv[1]) if len(argv) > 1 else 0
-    l1_ratio = float(argv[2]) if len(argv) > 2 else 0
-    print("Running with alpha=%.2f, l1_ratio=%.2f" % (alpha, l1_ratio))
+    with mlflow.start_run():
+        alpha    = float(argv[1]) if len(argv) > 1 else 0
+        l1_ratio = float(argv[2]) if len(argv) > 2 else 0
+        print("Running with alpha=%.2f, l1_ratio=%.2f" % (alpha, l1_ratio))
 
-    (x_train, y_train) = load_data("train.parquet")
-    (x_test, y_test) = load_data("test.parquet")
+	mlflow.log_param('alpha', alpha)
+	mlflow.log_param('l1', l1_ratio)
 
-    mlflow.log_param("alpha", alpha)
-    mlflow.log_param("l1_ratio", l1_ratio)
-    model = ElasticNet(alpha=alpha, l1_ratio=l1_ratio, random_state=42)
-    model.fit(x_train, y_train)
-    y_pred = model.predict(x_test)
-    
-    (mae, rmse, r2) = eval_metrics(y_test, y_pred)
+        (x_train, y_train) = load_data("train.parquet")
+        (x_test, y_test) = load_data("test.parquet")
+        model = ElasticNet(alpha=alpha, l1_ratio=l1_ratio, random_state=42)
+        model.fit(x_train, y_train)
+        y_pred = model.predict(x_test)
 
-    print("MAE", mae)
-    print("RMSE", rmse)
-    print("R2", r2)
+        (mae, rmse, r2) = eval_metrics(y_test, y_pred)
 
-    mlflow.log_metric("MAE", mae)
-    mlflow.log_metric("RMSE", rmse)
-    mlflow.log_metric("R2", r2)
+	mlflow.log_metric('mae', mae)
+	mlflow.log_metric('rmse', rmse)
+	mlflow.log_metric('r2', r2)
 
-    mlflow.log_artifact("train.parquet")
-    mlflow.log_artifact("plot.png")
+	mlflow.log_artifact('train.parquet')
+	mlflow.log_artifact('plot.png')
 
-    mlflow.sklearn.log_model(model, "model")
+        print("MAE", mae)
+        print("RMSE", rmse)
+        print("R2", r2)
+
+	mlflow.sklearn.log_model(model, 'pricing_model')
 
 
 def load_data(parquet_file):
